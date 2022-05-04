@@ -1,0 +1,23 @@
+{
+  "name": "mewstorage",
+  "version": "0.0.1",
+  "description": "a storage lib for browsers",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ibegyourpardon/mewStorage.git"
+  },
+  "keywords": [
+    "localstorage",
+    "sessionstorage"
+  ],
+  "author": "ibegyourpardon",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ibegyourpardon/mewStorage/issues"
+  },
+  "homepage": "https://github.com/ibegyourpardon/mewStorage#readme"
+}
