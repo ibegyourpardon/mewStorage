@@ -7,8 +7,8 @@ module.exports = {
   mode: 'production',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'storage.js',
-    library: 'storage',
+    filename: 'mewStorage.js',
+    library: 'mewStorage',
     libraryTarget: 'umd'
   },
   module: {
