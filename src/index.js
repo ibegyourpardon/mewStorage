@@ -1,112 +1,55 @@
-import { serialize, deserialize} from "./serialize";
-
-/**
- * 本地存储实现,封装localStorage和sessionStorage
- */
-let store = {
-  /* eslint-disable no-undef */
-  version: __VERSION__,
-  storage: window.localStorage,
-  session: {
-    storage: window.sessionStorage
-  }
+const config = {
+  type: 'localstorage', // localstorage or sessionstorage
+  expire: 1, // number for seconds, 0 for never expire
 }
 
-const api = {
-  set(key, val) {
-    if (this.disabled) {
-      return
-    }
-    if (val === undefined) {
-      return this.remove(key)
-    }
-    this.storage.setItem(key, serialize(val))
-    return val
-  },
+class MewStorage {
+  constructor(config) {
+    this.config = config;
+    this.storage = this.config.type === 'localstorage' ? window.localStorage : window.sessionStorage;
+    this.expire = this.config.expire ? this.config.expire : 0;
+  }
 
-  get(key, def) {
-    if (this.disabled) {
-      return def
+  setStorage = (key, value, expire = 0) => {
+    if (value === '' || value === null || value === undefined) {
+      value = null
     }
-    let val = deserialize(this.storage.getItem(key))
-    return (val === undefined ? def : val)
-  },
+    if (isNaN(expire) || expire < 0) throw new Error('expire must be a positive number')
 
-  has(key) {
-    return this.get(key) !== undefined
-  },
+    expire = (expire ? expire : config.expire) * 1000;
 
-  remove(key) {
-    if (this.disabled) {
-      return
+    let data = {
+      value,
+      expire,
+      time : Date.now()
     }
-    this.storage.removeItem(key)
-  },
+    window[this.storage].setItem(key, JSON.stringify(data));
+  }
 
-  clear() {
-    if (this.disabled) {
-      return
-    }
-    this.storage.clear()
-  },
-
-  getAll() {
-    if (this.disabled) {
+  getStorage = (key) => {
+    if (!window[this.storage].getItem(key) || JSON.stringify(window[this.storage].getItem(key)) === 'null') {
       return null
     }
-    let ret = {}
-    this.forEach((key, val) => {
-      ret[key] = val
-    })
-    return ret
-  },
 
-  forEach(callback) {
-    if (this.disabled) {
-      return
+    const data = JSON.parse(window[this.storage].getItem(key));
+    const nowTime = Date.now();
+
+    if (data.expire && this.config.expire * 1000 < nowTime - data.time) {
+      this.removeStorage(key);
+      return null
+    } else {
+      this.setStorage(key, data.value, data.expire);
+      return data.value
     }
-    for (let i = 0; i < this.storage.length; i++) {
-      let key = this.storage.key(i)
-      callback(key, this.get(key))
-    }
+  }
+
+  removeStorage = (key) => {
+    window[this.storage].removeItem(key);
+  }
+
+  clearStorage = () => {
+    window[this.storage].clear();
   }
 }
 
-Object.assign(store, api)
-
-Object.assign(store.session, api)
-
-// function serialize(val) {
-//   return JSON.stringify(val)
-// }
-//
-// function deserialize(val) {
-//   if (typeof val !== 'string') {
-//     return undefined
-//   }
-//   try {
-//     return JSON.parse(val)
-//   } catch (e) {
-//     return val || undefined
-//   }
-// }
-
-try {
-  const testKey = '__storejs__'
-  store.set(testKey, testKey)
-  if (store.get(testKey) !== testKey) {
-    store.disabled = true
-  }
-  store.remove(testKey)
-} catch (e) {
-  store.disabled = true
-}
-
-function Init() {
-  console.log('test')
-  return store;
-}
-
-export {
-  Init
-}
+export default new MewStorage(config);
